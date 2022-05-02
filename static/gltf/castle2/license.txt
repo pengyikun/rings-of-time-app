@@ -1,0 +1,11 @@
+Model Information:
+* title:	Harlech Castle Wales - UNESCO World Heritage
+* source:	https://sketchfab.com/3d-models/harlech-castle-wales-unesco-world-heritage-201f29ff3c1a49adb3d97bb7dd7ff043
+* author:	GSXNet (https://sketchfab.com/gsxn)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Harlech Castle Wales - UNESCO World Heritage" (https://sketchfab.com/3d-models/harlech-castle-wales-unesco-world-heritage-201f29ff3c1a49adb3d97bb7dd7ff043) by GSXNet (https://sketchfab.com/gsxn) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
