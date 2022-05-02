@@ -1,40 +1,34 @@
-# create-svelte
+# Rings of Time
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+Mixed Reality (COMP4036) student Project
+This project is for study purpose only
 
-## Creating a project
+## Usage
+1. Run `npm install` to install required libs
 
-If you're seeing this, you've probably already done this step. Congrats!
+2. Open `src/lib/components/Experience.svelte`
 
-```bash
-# create a new project in the current directory
-npm init svelte@next
+3. Navigate to line 3,  Replace  `GOOGLE_MAP_API_KEY` with your own Google Maps API Key
 
-# create a new project in my-app
-npm init svelte@next my-app
-```
+>  It is **recommanded to deploy the app** first by using service like Vercel or Heroku, you can then test the app by go to the deployed app website. 
+>
+> You can also test the app locally by running `npm run dev` and go to `localhost:3000` in browser, however, the accuracy of geolocation is quite low under wifi network. 
 
-> Note: the `@next` is temporary
+### Testing
 
-## Developing
+To ensure the quality of the user experience, please ensure you have the following settings configured before testing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+- To enable spatial audio function, you must using device that has gyroscope sensor (e.g. mobile phones)
+- For accurate geolocation detection, Use celluar data instead of WiFi
+- Set the following permission to true for your browser
+	- GPS location
+	- Camera
+	- Gyroscope (if indicates in the settigns panel)
+- Wear headset/earphone that supports stereo sound (already supported by almost all of the earphone)
 
-```bash
-npm run dev
+## Custom interest point coordinates
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+You can configure interest point coordinates if you are willing to test the app at the location other than Nottingham Castle
 
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+1. Open `src/lib/stores/interest-points.js`
+2. Modify the data in `interestPointsCoordinates` (line 3)
