@@ -3,6 +3,10 @@
 Mixed Reality (COMP4036) student Project
 This project is for study purpose only
 
+[Demo Video](https://www.youtube.com/watch?v=ybjxVWg2Ifo)
+
+[Live Demo Web App](https://rings-of-time.vercel.app)
+
 ## Usage
 1. Run `npm install` to install required libs
 
