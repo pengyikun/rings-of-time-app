@@ -7,6 +7,8 @@ This project is for study purpose only
 
 [Live Demo Web App](https://rings-of-time.vercel.app)
 
+[Intro](https://pengyikun.com/portfolio/rings-of-time)
+
 Rings of Time is a web application that provides an immersive auditory driven experience. The product uses locative media and location based augmented reality, using GPS data and mobile device orientation data to support the user in acquiring spatial audio through noise cancelling headphones. In a natural, immersive experience, the user locates various points of interest and views an augmented reality model of the castle’s appearance during various historical eras at the attraction’s location.
 
 ## Usage
