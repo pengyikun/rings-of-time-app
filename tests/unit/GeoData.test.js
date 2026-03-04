@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
 	calculateBearing,
 	calculateDirectionAngle,
-	calculate2DPos,
 	mapDegreeToPoints
 } from '../../src/lib/functions/GeoData.js';
 
@@ -88,49 +87,6 @@ describe('calculateDirectionAngle', () => {
 });
 
 // ---------------------------------------------------------------------------
-// calculate2DPos
-// ---------------------------------------------------------------------------
-
-describe('calculate2DPos', () => {
-	it('returns an object with x and y properties', () => {
-		const result = calculate2DPos(1, 0);
-		expect(result).toHaveProperty('x');
-		expect(result).toHaveProperty('y');
-	});
-
-	it('zero distance produces origin regardless of angle', () => {
-		const result = calculate2DPos(0, 45);
-		expect(result.x).toBeCloseTo(0, 10);
-		expect(result.y).toBeCloseTo(0, 10);
-	});
-
-	it('angle 0° points along positive x-axis', () => {
-		const result = calculate2DPos(1, 0);
-		expect(result.x).toBeCloseTo(1, 10);
-		expect(result.y).toBeCloseTo(0, 10);
-	});
-
-	it('angle 90° points along positive y-axis', () => {
-		const result = calculate2DPos(1, 90);
-		expect(result.x).toBeCloseTo(0, 10);
-		expect(result.y).toBeCloseTo(1, 10);
-	});
-
-	it('angle 45° produces equal x and y at distance √2', () => {
-		const result = calculate2DPos(10, 45);
-		expect(result.x).toBeCloseTo(7.071, 2);
-		expect(result.y).toBeCloseTo(7.071, 2);
-	});
-
-	it('distance scales x and y linearly', () => {
-		const r1 = calculate2DPos(1, 30);
-		const r2 = calculate2DPos(5, 30);
-		expect(r2.x).toBeCloseTo(r1.x * 5, 10);
-		expect(r2.y).toBeCloseTo(r1.y * 5, 10);
-	});
-});
-
-// ---------------------------------------------------------------------------
 // mapDegreeToPoints
 // ---------------------------------------------------------------------------
 
@@ -176,15 +132,30 @@ describe('mapDegreeToPoints', () => {
 		expect(mapDegreeToPoints(270)).toEqual({ x: -1, y: 0, directionHint: 'Left' });
 	});
 
-	it('271–360° → Top Left', () => {
+	it('271–359° → Top Left', () => {
 		expect(mapDegreeToPoints(271)).toEqual({ x: -1, y: 1, directionHint: 'Top Left' });
 		expect(mapDegreeToPoints(315)).toEqual({ x: -1, y: 1, directionHint: 'Top Left' });
 		expect(mapDegreeToPoints(316)).toEqual({ x: -1, y: 1, directionHint: 'Top Left' });
-		expect(mapDegreeToPoints(360)).toEqual({ x: -1, y: 1, directionHint: 'Top Left' });
 	});
 
-	it('> 360° falls through to default Forward position', () => {
-		expect(mapDegreeToPoints(361)).toEqual({ x: 0, y: 0, directionHint: 'Forward' });
+	it('360° normalizes to 0° (Forward)', () => {
+		expect(mapDegreeToPoints(360)).toEqual({ x: 0, y: 1, directionHint: 'Forward' });
+	});
+
+	it('> 360° is normalized to 0-360 range', () => {
+		expect(mapDegreeToPoints(361)).toEqual({ x: 1, y: 1, directionHint: 'Top Right' });
+	});
+
+	it('negative degree is normalized to 0-360 range', () => {
+		expect(mapDegreeToPoints(-90)).toEqual({ x: -1, y: 0, directionHint: 'Left' });
+	});
+
+	it('-180° normalizes to Backward', () => {
+		expect(mapDegreeToPoints(-180)).toEqual({ x: 0, y: -1, directionHint: 'Backward' });
+	});
+
+	it('-360° normalizes to Forward (0°)', () => {
+		expect(mapDegreeToPoints(-360)).toEqual({ x: 0, y: 1, directionHint: 'Forward' });
 	});
 
 	it('covers all 8 compass directions', () => {

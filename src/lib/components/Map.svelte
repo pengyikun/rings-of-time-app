@@ -1,20 +1,25 @@
 <script>
-
 	import { onMount } from 'svelte';
 	import { currentCoord, interestPointsInfo, interestPointsCoordinates } from '../stores/interest-points';
 
-	export let updateStatus;
+	let { updateStatus } = $props();
 
-	$: $currentCoord, updateMap();
 	let container;
 	let map;
 	let marker;
 	let circles = {};
 	let zoom = 18;
 
-	onMount(async () => {
-		// Set center of the map to default coordinates
-		// and add a marker default marker
+	$effect(() => {
+		$currentCoord;
+		updateMap();
+	});
+
+	onMount(() => {
+		if (!window.google?.maps) {
+			updateStatus('Error: Google Maps not available');
+			return;
+		}
 		updateStatus('Loaded map module');
 		const { lat, lng } = $currentCoord;
 		map = new google.maps.Map(container, {
@@ -30,7 +35,10 @@
 		updateCircle();
 	});
 
-	export let updateCircle = () => {
+	let updateCircle = () => {
+		for (let key in circles) {
+			circles[key].setMap(null);
+		}
 		circles = {};
 		for (let points in $interestPointsInfo) {
 			const coordinate = $interestPointsCoordinates[points];
@@ -46,15 +54,12 @@
 			});
 			circles[points] = interestPointCircle;
 		}
-
 	};
 
-
 	let updateMap = () => {
-		if (!map) {
+		if (!map || !window.google?.maps) {
 			return;
 		}
-		console.log('Updating map');
 		const { lat, lng } = $currentCoord;
 		let mapLocation = new google.maps.LatLng(lat, lng);
 		map.setCenter(mapLocation);
@@ -67,16 +72,12 @@
 			title: 'Your current location'
 		});
 	};
-
-
 </script>
 
-<div
-	class='w-4/5 h-64 mb-2 flex flex-col items-center justify-center rounded-md border-1 border-grey-500'
->
+<div class="w-4/5 h-64 mb-2 flex flex-col items-center justify-center rounded-md border-1 border-grey-500">
 	<h1>Map</h1>
-	<div class='mt-1 text-xs'>
+	<div class="mt-1 text-xs">
 		Coordinates: {$currentCoord.lat.toFixed(4)},{$currentCoord.lng.toFixed(4)}
 	</div>
-	<div class='min-w-40 min-h-40 w-full h-full m-1 rounded-md' bind:this={container} />
+	<div class="min-w-40 min-h-40 w-full h-full m-1 rounded-md" bind:this={container}></div>
 </div>

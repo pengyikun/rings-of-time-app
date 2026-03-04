@@ -1,11 +1,11 @@
 <svelte:head>
 	<script
-		src='https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAP_API_KEY&libraries=geometry&callback=initMap'>
+		src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAP_API_KEY&libraries=geometry&callback=initMap">
 	</script>
 </svelte:head>
 
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { getCurrentTime, sleep } from '../functions/Utilities';
 	import { calculateBearing, calculateDirectionAngle, mapDegreeToPoints } from '../functions/GeoData';
 	import { Howl } from 'howler';
@@ -26,19 +26,17 @@
 
 	let isOrientationEnabled = false;
 	let isInitialized = false;
-	let googleLoaded = false;
+	let googleLoaded = $state(false);
 
-	let isImageGalleryAvaliable = false;
-	let isARAvaliable = false;
-	let isARPanelOpened = false;
+	let isImageGalleryAvaliable = $state(false);
+	let isARAvaliable = $state(false);
+	let isARPanelOpened = $state(false);
 
-
-	let map;
 	let watchId;
 
-	let status = 'Idle';
-	let soundHint = { direction: 'idle', distance: 0 };
-	let deviceHeading = 0;
+	let status = $state('Idle');
+	let soundHint = $state({ direction: 'idle', distance: 0 });
+	let deviceHeading = $state(0);
 	let backgroundMusicAudios = {};
 	let narrativeAudios = {};
 
@@ -46,15 +44,33 @@
 		updateStatus('Initializing');
 
 		// Sleep until google module is fully loaded
-		while (!google) {
-			console.log('Awaiting google module');
-			await sleep(500);
+		const maxWait = 15000;
+		const interval = 500;
+		let waited = 0;
+		while (!window.google) {
+			if (waited >= maxWait) {
+				updateStatus('Error: Google Maps failed to load');
+				return;
+			}
+			await sleep(interval);
+			waited += interval;
 		}
 
-		// Set center of the map to default coordinates
-		// and add a marker default marker
 		googleLoaded = true;
 		updateStatus('Idle');
+	});
+
+	onDestroy(() => {
+		if (watchId != null) {
+			navigator.geolocation.clearWatch(watchId);
+		}
+		window.removeEventListener('deviceorientation', handleOrientation, true);
+		for (let key in backgroundMusicAudios) {
+			backgroundMusicAudios[key]?.audio?.unload();
+		}
+		for (let key in narrativeAudios) {
+			narrativeAudios[key]?.audio?.unload();
+		}
 	});
 
 	let startExperience = () => {
@@ -65,7 +81,6 @@
 			if (!isInitialized) {
 				initConfig();
 			}
-			//return;
 			monitorGeoLocation();
 
 			// Check if device orientation permission is set to allowed by user
@@ -124,9 +139,7 @@
 				return data;
 			});
 		}
-		//console.log($pointsData);
 		isInitialized = true;
-		//console.log(backgroundMusicAudios);
 	};
 
 	let monitorGeoLocation = () => {
@@ -151,6 +164,11 @@
 	};
 
 	let monitorOrientation = () => {
+		if (typeof DeviceOrientationEvent?.requestPermission !== 'function') {
+			window.addEventListener('deviceorientation', handleOrientation, true);
+			isOrientationEnabled = true;
+			return;
+		}
 		// @ts-ignore
 		DeviceOrientationEvent.requestPermission()
 			.then(response => {
@@ -166,7 +184,6 @@
 	};
 
 	let handleOrientation = (event) => {
-		//const { absolute, alpha, beta, gamma, webkitCompassHeading } = event;
 		const { webkitCompassHeading } = event;
 		deviceHeading = webkitCompassHeading;
 	};
@@ -175,12 +192,14 @@
 		updateStatus('Stopped');
 		isExperienceRunning.set(false);
 		navigator.geolocation.clearWatch(watchId);
+		window.removeEventListener('deviceorientation', handleOrientation, true);
+		isOrientationEnabled = false;
 		stopBgAudio();
 		stopNarrativeAudio();
 	};
 
 	let updateGeoLocation = (position) => {
-		if (position.coords.longitude && position.coords.latitude) {
+		if (position.coords.latitude != null && position.coords.longitude != null) {
 			const { latitude, longitude } = position.coords;
 			const lat = latitude;
 			const lng = longitude;
@@ -249,7 +268,6 @@
 				bgMusicVolume.set(0.8);
 				updateBgAudioVolume();
 				inEventsArea = true;
-				// break;
 			}
 			if ($currentPoint === points_name) {
 				if (distance > radius) {
@@ -303,7 +321,6 @@
 				}
 				isImageGalleryAvaliable = false;
 				isARAvaliable = false;
-				//bgMusicVolume.set(.8);
 				const { radius } = $interestPointsCoordinates[$currentPoint];
 				const { distance } = $pointsData[$currentPoint];
 				const adjustedVolume = (radius - distance) / (radius / 2);
@@ -319,53 +336,43 @@
 	};
 
 	let playBgAudio = () => {
-		// if (!backgroundMusicAudios[$currentPoint].audio) {
-		// 	console.log('Cancel play cause background audio is null');
-		// 	return;
-		// }
-		console.log(`Play audio for ${$currentPoint}`);
-		console.log(backgroundMusicAudios);
+		if (!backgroundMusicAudios[$currentPoint]?.audio) return;
 		backgroundMusicAudios[$currentPoint].soundId = backgroundMusicAudios[$currentPoint].audio.play();
 	};
 
 	let setBgAudioPosition = (x, y, z = 0) => {
+		if (!backgroundMusicAudios[$currentPoint]?.audio) return;
 		backgroundMusicAudios[$currentPoint].audio.pos(x, y, z, backgroundMusicAudios[$currentPoint].soundId);
 	};
 
 	let updateBgAudioVolume = () => {
-		// if (!backgroundMusicAudios[$currentPoint].audio) {
-		// 	console.log('Cancel update volume cause background audio is null');
-		// 	return;
-		// }
+		if (!backgroundMusicAudios[$currentPoint]?.audio) return;
 		backgroundMusicAudios[$currentPoint].audio.volume($bgMusicVolume);
 	};
 
 	let isBgAudioPlaying = () => {
+		if (!backgroundMusicAudios[$currentPoint]?.audio) return false;
 		return backgroundMusicAudios[$currentPoint].audio.playing();
 	};
 
 	let stopBgAudio = () => {
-		// if (!backgroundMusicAudios[$currentPoint].audio || !isBgAudioPlaying()) {
-		// 	console.log('Cancel stop cause background audio is either null or not playing');
-		// 	return;
-		// }
+		if (!backgroundMusicAudios[$currentPoint]?.audio) return;
 		backgroundMusicAudios[$currentPoint].audio.stop();
 		backgroundMusicAudios[$currentPoint].soundId = null;
 	};
 
 	let playNarrativeAudio = () => {
+		if (!narrativeAudios[$currentPoint]?.audio) return;
 		narrativeAudios[$currentPoint].soundId = narrativeAudios[$currentPoint].audio.play();
 	};
 
-	let setNarrativeAudioPosition = (x, y, z = 0) => {
-		narrativeAudios[$currentPoint].audio.pos(x, y, z, narrativeAudios[$currentPoint].soundId);
-	};
-
 	let updateNarrativeAudioVolume = () => {
+		if (!narrativeAudios[$currentPoint]?.audio) return;
 		narrativeAudios[$currentPoint].audio.volume($narrativeVolume);
 	};
 
 	let isNarrativeAudioPlaying = () => {
+		if (!narrativeAudios[$currentPoint]?.audio) return false;
 		return narrativeAudios[$currentPoint].audio.playing();
 	};
 
@@ -393,8 +400,8 @@
 </script>
 
 
-<div class='mt-5 flex flex-col justify-center items-center mb-3'>
-	<div class='rounded bg-gray-400'><span class='m-3 text-xs'>{status}</span></div>
+<div class="mt-5 flex flex-col justify-center items-center mb-3">
+	<div class="rounded bg-gray-400"><span class="m-3 text-xs">{status}</span></div>
 </div>
 
 {#if isARPanelOpened}
@@ -405,7 +412,7 @@
 	<ImageGallery toggleARPanel={toggleARPanel} isARAvaliable={isARAvaliable} />
 {/if}
 
-<div class='flex flex-col items-center justify-center '>
+<div class="flex flex-col items-center justify-center">
 
 	<ExperienceControlPanel deviceHeading={deviceHeading}
 													soundHint={soundHint}
@@ -414,10 +421,10 @@
 													toggleARPanel={toggleARPanel}
 	/>
 
-	<hr class='m-2' />
+	<hr class="m-2" />
 
 	{#if googleLoaded}
-		<Map bind:this={map} updateStatus={updateStatus} />
+		<Map updateStatus={updateStatus} />
 	{/if}
 
 	<LocationInfoTable />

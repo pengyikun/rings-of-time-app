@@ -1,9 +1,8 @@
-<div class='p-8 max-w-6xl mx-auto'>
-	<slot />
-</div>
+<script>
+	import '../app.css';
+	let { children } = $props();
+</script>
 
-<style>
-    @tailwind base;
-    @tailwind components;
-    @tailwind utilities;
-</style>
+<div class="p-8 max-w-6xl mx-auto">
+	{@render children()}
+</div>

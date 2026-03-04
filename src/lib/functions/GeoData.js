@@ -15,14 +15,8 @@ export const calculateDirectionAngle = (i, t) => {
 	return ((diff + 180) % 360) - 180;
 };
 
-export const calculate2DPos = (distance, angel) => {
-	return {
-		x: distance * Math.cos((angel * Math.PI) / 180),
-		y: distance * Math.sin((angel * Math.PI) / 180)
-	};
-};
-
 export const mapDegreeToPoints = (degree) => {
+	degree = ((degree % 360) + 360) % 360;
 	if (degree === 0) {
 		return { x: 0, y: 1, directionHint: 'Forward' };
 	} else if (degree <= 45) {

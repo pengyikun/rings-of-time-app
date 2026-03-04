@@ -6,7 +6,6 @@ export const interestPointsCoordinates = readable({
 	2: { lat: 52.94979, lng: -1.15467, radius: 40 }
 });
 
-
 export const interestPointsInfo = readable({
 	'entrance': {
 		name: 'Norman Beginnings',
@@ -24,16 +23,13 @@ export const interestPointsInfo = readable({
 	}
 });
 
-
 export const isExperienceRunning = writable(false);
 export const currentPoint = writable('1');
 export const currentCoord = writable({ lat: 52.94772, lng: -1.14579 });
 export const pointsData = writable({});
 
-
 export const bgMusicVolume = writable(0.9);
 export const narrativeVolume = writable(.3);
-
 
 export const imageData = readable({
 	1: [

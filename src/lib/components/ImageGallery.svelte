@@ -1,64 +1,67 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { imageData, currentPoint, interestPointsInfo } from '../stores/interest-points.js';
 	import { sleep } from '../functions/Utilities.js';
 
-	export let isARAvaliable;
-	export let toggleARPanel;
+	let { isARAvaliable, toggleARPanel } = $props();
 	let images = {};
 
-	let isMinimize = false;
-	let isPlaying = false;
-	let currentImgSrc;
+	let isMinimize = $state(false);
+	let currentImgSrc = $state(undefined);
+	let cancelled = false;
 
 	onMount(() => {
 		images = { ...$imageData };
 		for (let point in images) {
-			images[point] = images[point].map(fileName => {
+			images[point] = images[point].map((fileName) => {
 				return `image/castle-img-${fileName}.jpeg`;
 			});
 		}
-		// console.log(images);
-		// currentPoint.set(2);
 		playGallery();
 	});
 
-	let playGallery = async () => {
-		if ($currentPoint != 'idle') {
+	onDestroy(() => {
+		cancelled = true;
+	});
 
-			isPlaying = true;
-			console.log(`[ImageGallery] Play gallery ${$currentPoint}`);
-			//console.log(images[$currentPoint]);
-			let newImgsrc = images[$currentPoint][Math.round(Math.random() * (images[$currentPoint].length - 1))];
-			while (newImgsrc === currentImgSrc) {
-				newImgsrc = images[$currentPoint][Math.round(Math.random() * (images[$currentPoint].length - 1))];
-				await sleep(50);
+	let playGallery = async () => {
+		while (!cancelled) {
+			if ($currentPoint != 'idle') {
+				let list = images[$currentPoint] ?? [];
+				if (list.length === 1) {
+					currentImgSrc = list[0];
+				} else if (list.length > 1) {
+					let newImgsrc = list[Math.floor(Math.random() * list.length)];
+					let retries = 0;
+					while (newImgsrc === currentImgSrc && retries < 5) {
+						newImgsrc = list[Math.floor(Math.random() * list.length)];
+						retries++;
+					}
+					currentImgSrc = newImgsrc;
+				}
 			}
-			currentImgSrc = newImgsrc;
-			//console.log(currentImgSrc);
+			await sleep(5000);
 		}
-		await sleep(5000);
-		playGallery();
 	};
 </script>
 
-<div class='bg-gray-300 flex flex-col items-center justify-center'>
+<div class="bg-gray-300 flex flex-col items-center justify-center">
 	{#if !isMinimize}
-		<div class='text-l font-bold mt-5'>{$interestPointsInfo[$currentPoint].name}</div>
+		<div class="text-l font-bold mt-5">{$interestPointsInfo[$currentPoint].name}</div>
 		{#if isARAvaliable}
-			<button class='text-sm rounded-md bg-blue-300 px-10 py-1 my-5'
-							on:click={toggleARPanel}>View AR
-			</button>
+			<button class="text-sm rounded-md bg-blue-300 px-10 py-1 my-5" onclick={toggleARPanel}>View AR</button>
 		{/if}
 		{#if currentImgSrc}
-			<img src={currentImgSrc} alt='castle-img' class='w-4/5 mt-2 mb-1 rounded-md'>
+			<img src={currentImgSrc} alt="castle-img" class="w-4/5 mt-2 mb-1 rounded-md" />
 		{/if}
-		<div class='text-xs m-5'>
+		<div class="text-xs m-5">
 			{$interestPointsInfo[$currentPoint].narrativeContent}
 		</div>
 	{/if}
-	<button class='text-sm rounded-md bg-blue-300 px-10 py-1 my-5'
-					on:click={()=>{isMinimize = !isMinimize}}>{isMinimize ? 'Show Point Information' : 'Hide Point\n' +
-		'\t\tInformation'}
-	</button>
+	<button
+		class="text-sm rounded-md bg-blue-300 px-10 py-1 my-5"
+		onclick={() => {
+			isMinimize = !isMinimize;
+		}}>{isMinimize ? 'Show Point Information' : 'Hide Point Information'}</button
+	>
 </div>

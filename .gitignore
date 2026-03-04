@@ -1,7 +1,40 @@
-.DS_Store
-node_modules
+# Dependencies
+node_modules/
+
+# Build outputs
 /build
 /.svelte-kit
+
+# Package artifacts
 /package
+
+# Environment variables
+.env
+.env.*
 !.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Lock files (if not committed)
 package-lock.json
+
+# Test results
+/test-results/
+/playwright-report/
+/coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel
